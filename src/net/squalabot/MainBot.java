@@ -109,13 +109,14 @@ public class MainBot extends ListenerAdapter{
 		String content = message.getContentDisplay();
 		String[] splitedContent = content.split(" ");
 		String argv = splitedContent[0];
-		String argc = splitedContent[1];
+		
+		System.out.println(argv);
 		
 		boolean isBot = author.isBot();
 		
 		if(event.isFromType(ChannelType.TEXT)) {
-			if(!message.isWebhookMessage() && !isBot && content.charAt(0) == Statics.prefix) {
-				switch (content.substring(1, content.length())) {
+			if(!message.isWebhookMessage() && !isBot && argv.charAt(0) == Statics.prefix) {
+				switch (argv.substring(1, content.length())) {
 				case "coucou":
 					commands.get("coucou").handle(event);
 					break;
