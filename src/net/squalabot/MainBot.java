@@ -15,6 +15,7 @@ import net.dv8tion.jda.core.entities.Game;
 import javax.security.auth.login.LoginException;
 import java.util.Scanner;
 import java.util.Hashtable;
+import java.util.regex.*;
 
 import net.squalabot.command.Command;
 import net.squalabot.command.*;
@@ -32,6 +33,7 @@ public class MainBot extends ListenerAdapter{
 	private static void initCommands() {
 		commands.put("coucou", new CoucouHandler());
 		//commands.put("music", new MusicHandler());
+		commands.put("crypto", new CryptoHandler());
 	}
 	
 	public static void main(String[] args) 
@@ -105,6 +107,9 @@ public class MainBot extends ListenerAdapter{
 		MessageChannel channel = event.getChannel();
 		
 		String content = message.getContentDisplay();
+		String[] splitedContent = content.split(" ");
+		String argv = splitedContent[0];
+		String argc = splitedContent[1];
 		
 		boolean isBot = author.isBot();
 		
@@ -120,8 +125,11 @@ public class MainBot extends ListenerAdapter{
 						channel.sendMessage(commands.get(key).description()).queue();
 					}
 					break;
+				case "crypto":
+					commands.get("crypto").handle(event);
+					break;
 				default:
-					channel.sendMessage("Action invalide (ou pas encore implémentée mdr), tapez '"+Statics.prefix+"help' pour plus d'informations sur les commandes.").queue();
+					channel.sendMessage("Action invalide (ou pas encore implï¿½mentï¿½e mdr), tapez '"+Statics.prefix+"help' pour plus d'informations sur les commandes.").queue();
 				}
 			}
 		}
