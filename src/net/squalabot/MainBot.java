@@ -10,16 +10,29 @@ import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.ChannelType;
+import net.dv8tion.jda.core.entities.Game;
 
 import javax.security.auth.login.LoginException;
 import java.util.Scanner;
+import java.util.Hashtable;
+
+import net.squalabot.command.Command;
+import net.squalabot.command.*;
 
 /*
  * sweg
  */
 public class MainBot extends ListenerAdapter{
 	
-	private char prefix = '&';
+	static JDABuilder builder;
+	static JDA jda;
+	
+	static Hashtable<String, Command> commands = new Hashtable<>();
+	
+	private static void initCommands() {
+		commands.put("coucou", new CoucouHandler());
+		//commands.put("music", new MusicHandler());
+	}
 	
 	public static void main(String[] args) 
 			throws LoginException, InterruptedException {
@@ -28,11 +41,40 @@ public class MainBot extends ListenerAdapter{
 	        System.out.println("Please specify bot token.");
 	    }
 		else {
-			try {
+
 				// JDA initialization
 				System.out.println("Initialization of Discord bot.\nToken: " + args[0]);
-				JDA jda = new JDABuilder(AccountType.BOT).setToken(args[0]).addEventListener(new MainBot()).buildBlocking();
+				
+				builder = new JDABuilder(AccountType.BOT)
+						.setToken(args[0])
+						.setAudioEnabled(true)
+						.setGame(Game.of(Game.GameType.DEFAULT,Statics.prefix+"help"));
+				
+				builder.addEventListener(new MainBot());
+				
+				try {
+					jda = builder.buildBlocking();
+				}
+				catch (LoginException e) {
+					e.printStackTrace();
+					System.out.println("Login exception occurred: attempt to connect (JDA initialization failed).");
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+					System.out.println("Interrupted exception occurred: shutdown requested while trying to initialize JDA.");
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+					if(!stop) {
+						jda.shutdown();
+						System.out.println("Unpredicted failure, JDA shutdown.");
+					}
+				}
+				
+				initCommands();
+				
 				System.out.println("Bot successfully initialized.");
+				
 				// Loop for terminal commands (server based part)
 				while(!stop) {
 					Scanner scanner = new Scanner(System.in);
@@ -45,20 +87,6 @@ public class MainBot extends ListenerAdapter{
 					}
 				}
 			}
-			catch (LoginException e) {
-				e.printStackTrace();
-				System.out.println("Login exception occurred: attempt to connect (JDA initialization failed).");
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-				System.out.println("Interrupted exception occurred: shutdown requested while trying to initialize JDA.");
-			}
-			finally {
-				if(!stop) {
-					System.out.println("Unpredicted failure.");
-				}
-			}
-		}
 	}
 	
 	/*
@@ -81,16 +109,19 @@ public class MainBot extends ListenerAdapter{
 		boolean isBot = author.isBot();
 		
 		if(event.isFromType(ChannelType.TEXT)) {
-			if(!message.isWebhookMessage() && content.charAt(0) == prefix) {
-				switch (content) {
-				case "&help":
-					new HelpCommand(event);
+			if(!message.isWebhookMessage() && !isBot && content.charAt(0) == Statics.prefix) {
+				switch (content.substring(1, content.length())) {
+				case "coucou":
+					commands.get("coucou").handle(event);
 					break;
-				case "&coucou":
-					new CoucouCommand(event);
+				case "help":
+					channel.sendMessage("Liste des commandes:").queue();
+					for(String key:commands.keySet()) {
+						channel.sendMessage(commands.get(key).description()).queue();
+					}
 					break;
 				default:
-					channel.sendMessage("Action invalide (ou pas encore implémentée mdr), tapez '&help' pour plus d'informations sur les commandes.").queue();
+					channel.sendMessage("Action invalide (ou pas encore implémentée mdr), tapez '"+Statics.prefix+"help' pour plus d'informations sur les commandes.").queue();
 				}
 			}
 		}
