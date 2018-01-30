@@ -110,20 +110,18 @@ public class MainBot extends ListenerAdapter{
 		String[] splitedContent = content.split(" ");
 		String argv = splitedContent[0];
 		
-		System.out.println(argv);
-		
 		boolean isBot = author.isBot();
 		
 		if(event.isFromType(ChannelType.TEXT)) {
 			if(!message.isWebhookMessage() && !isBot && argv.charAt(0) == Statics.prefix) {
-				switch (argv.substring(1, content.length())) {
+				switch (argv.substring(1, argv.length())) {
 				case "coucou":
 					commands.get("coucou").handle(event);
 					break;
 				case "help":
 					channel.sendMessage("Liste des commandes:").queue();
 					for(String key:commands.keySet()) {
-						channel.sendMessage(commands.get(key).description()).queue();
+						channel.sendMessage(commands.get(key).description()+ "\n").queue();
 					}
 					break;
 				case "crypto":
